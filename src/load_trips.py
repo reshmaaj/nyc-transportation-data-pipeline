@@ -11,8 +11,8 @@ load_dotenv()
 # INPUT_FILE = "data/silver/yellow_tripdata_2026-01_clean.parquet"
 # SOURCE_FILE = "yellow_tripdata_2026-01.parquet"
 
-# --------------------------------
-# GET MONTH FROM COMMAND LINE
+
+#getting mon from cmd line args
 if len(sys.argv) != 2:
     print("Usage: python src/load_trips.py YYYY-MM")
     sys.exit(1)
@@ -23,18 +23,12 @@ INPUT_FILE = f"data/silver/yellow_tripdata_{month}_clean.parquet"
 SOURCE_FILE = f"yellow_tripdata_{month}.parquet"
 
 
-# --------------------------------
-# CHECK CLEAN FILE EXISTS
-# --------------------------------
 if not os.path.exists(INPUT_FILE):
     print(f"Clean file not found: {INPUT_FILE}")
     print(f"Run: python src/clean_data.py {month}")
     sys.exit(1)
 
 
-# --------------------------------
-# 1. CONNECT TO POSTGRESQL
-# --------------------------------
 conn = psycopg2.connect(
     host=os.getenv("DB_HOST"),
     port=os.getenv("DB_PORT"),
@@ -45,10 +39,6 @@ conn = psycopg2.connect(
 
 cursor = conn.cursor()
 
-
-# --------------------------------
-# 2. CHECK IF FILE WAS ALREADY LOADED
-# --------------------------------
 cursor.execute(
     """
     SELECT 1
@@ -67,17 +57,11 @@ if already_loaded:
     exit()
 
 
-# --------------------------------
-# 3. READ CLEAN PARQUET
-# --------------------------------
 df = pd.read_parquet(INPUT_FILE)
 
 print("Rows read:", len(df))
 
 
-# --------------------------------
-# 4. SELECT REQUIRED COLUMNS
-# --------------------------------
 df = df[
     [
         "VendorID",
@@ -102,9 +86,6 @@ df = df[
 ].copy()
 
 
-# --------------------------------
-# 5. RENAME COLUMNS
-# --------------------------------
 df.columns = [
     "vendor_id",
     "pickup_datetime",
@@ -127,9 +108,6 @@ df.columns = [
 ]
 
 
-# --------------------------------
-# 6. FIX INTEGER COLUMN TYPES
-# --------------------------------
 integer_columns = [
     "vendor_id",
     "passenger_count",
@@ -143,9 +121,6 @@ for column in integer_columns:
     df[column] = df[column].astype("Int64")
 
 
-# --------------------------------
-# 7. CREATE TEMPORARY CSV
-# --------------------------------
 with tempfile.NamedTemporaryFile(
     mode="w",
     suffix=".csv",
@@ -166,9 +141,7 @@ with tempfile.NamedTemporaryFile(
 print("Temporary CSV created.")
 
 
-# --------------------------------
-# 8. PREPARE POSTGRESQL COPY
-# --------------------------------
+
 copy_sql = """
 COPY taxi_trips (
     vendor_id,
@@ -198,9 +171,6 @@ WITH (
 """
 
 
-# --------------------------------
-# 9. LOAD DATA + RECORD METADATA
-# --------------------------------
 try:
     with open(temp_path, "r", encoding="utf-8") as f:
         cursor.copy_expert(copy_sql, f)
@@ -225,9 +195,6 @@ except Exception as e:
     print("Load failed:", e)
 
 
-# --------------------------------
-# 10. CLEAN UP
-# --------------------------------
 finally:
     cursor.close()
     conn.close()

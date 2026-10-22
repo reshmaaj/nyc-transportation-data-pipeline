@@ -1,22 +1,17 @@
 import pandas as pd
 
-
 file_path = "data/bronze/yellow_tripdata_2026-01.parquet"
 
 df = pd.read_parquet(file_path)
 
-
 print("\n FIRST 5 ROWS")
 print(df.head())
-
 
 print("\n DATASET SHAPE")
 print(df.shape)
 
-
 print("\n COLUMN NAMES")
 print(df.columns.tolist())
-
 
 print("\n DATA TYPES")
 print(df.dtypes)
@@ -70,7 +65,6 @@ print(
         <= df["tpep_pickup_datetime"]
     ).sum()
 )
-
 
 print("\n OUTSIDE JANUARY 2026")
 
