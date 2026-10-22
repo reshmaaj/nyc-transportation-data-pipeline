@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+
+data/bronze/
+data/silver/
+data/gold/
+
+spark-warehouse/
+
+src/spark_practice.py
